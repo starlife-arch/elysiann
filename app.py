@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+from werkzeug.exceptions import HTTPException
 
 from utils.cloudinary import upload_user_photos
 from utils.firebase_config import get_auth, get_firestore
@@ -90,6 +91,12 @@ def inject_auth():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/favicon.ico")
+@app.route("/favicon.png")
+def favicon():
+    return redirect(url_for("static", filename="favicon.png"), code=302)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -262,7 +269,7 @@ def messages_tab():
     return render_template("messages.html", inbox=inbox, outbox=outbox, matched_users=matched_users)
 
 
-@app.route("/message", methods=["POST"])
+@app.route("/message", methods=["POST"], endpoint="send_message")
 @login_required
 def send_message():
     from_uid = session["uid"]
@@ -368,6 +375,8 @@ def send_message():
 
 @app.errorhandler(Exception)
 def handle_exception(exc):
+    if isinstance(exc, HTTPException):
+        return render_template("error.html", error=exc.description), exc.code
     app.logger.exception("Unhandled error: %s", exc)
     return render_template("error.html", error="Service temporarily unavailable."), 500
 
