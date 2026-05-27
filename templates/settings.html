@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide">
+  <nav class="tabs">
+    <a class="tab" href="{{ url_for('dashboard') }}">Swipe</a>
+    <a class="tab" href="{{ url_for('messages_tab') }}">Messages</a>
+    <a class="tab active" href="{{ url_for('settings_tab') }}">Settings</a>
+    <a class="tab" href="{{ url_for('premium_tab') }}">Premium</a>
+  </nav>
+  <section class="form-card">
+    <h2>Profile Settings</h2>
+    <form method="post" enctype="multipart/form-data" class="app-form">
+      <div class="field"><label>Bio</label><textarea name="bio">{{ user.bio }}</textarea></div>
+      <div class="field"><label>Interests (comma separated)</label><input name="interests" value="{{ (user.profile_interests or user.interests or []) | join(', ') }}"></div>
+      <div class="field"><label>Add / Replace Photos</label><input name="photos" type="file" multiple accept="image/*"></div>
+      <button class="btn-primary" type="submit">Save Changes</button>
+    </form>
+  </section>
+</div>
+{% include '_member_nav.html' %}
+{% endblock %}

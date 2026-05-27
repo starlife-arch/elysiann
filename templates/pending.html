@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-wrap">
+  <div class="form-card form-card--narrow pending-card">
+    <span class="form-badge">Verification Pending</span>
+    <h2>Application Received</h2>
+    <p class="form-desc">Thanks {{ user.full_name }}. Your profile is under review. Once approved, your invite code and next steps will appear in your dashboard email + admin queue.</p>
+    <ul class="pending-list">
+      <li>Identity check in progress</li>
+      <li>Video verification status: {{ user.video_verification_status or 'pending' }}</li>
+      <li>Average review time: up to 48 hours</li>
+    </ul>
+    <a class="btn-primary full" href="{{ url_for('login') }}">Back to Login</a>
+  </div>
+</div>
+{% endblock %}

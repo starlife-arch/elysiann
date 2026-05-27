@@ -1,0 +1,7 @@
+<nav class="bottom-nav">
+  <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint=='dashboard' %}active{% endif %}">🔥<span>Swipe</span></a>
+  <a href="{{ url_for('explore_tab') }}" class="{% if request.endpoint=='explore_tab' %}active{% endif %}">🧭<span>Explore</span></a>
+  <a href="{{ url_for('likes_tab') }}" class="{% if request.endpoint=='likes_tab' %}active{% endif %}">❤️<span>Likes</span></a>
+  <a href="{{ url_for('messages_tab') }}" class="{% if request.endpoint=='messages_tab' %}active{% endif %}">💬<span>Chat</span></a>
+  <a href="{{ url_for('profile_tab') }}" class="{% if request.endpoint in ['profile_tab','settings_tab','premium_tab'] %}active{% endif %}">👤<span>Profile</span></a>
+</nav>

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide mobile-pad">
+  <section class="card-glass"><h2>{{ user.full_name }}</h2><p>{{ user.bio }}</p><a class="btn" href="{{ url_for('settings_tab') }}">Edit profile</a> <a class="btn gold" href="{{ url_for('premium_tab') }}">Subscriptions</a></section>
+</div>
+{% include '_member_nav.html' %}
+{% endblock %}
