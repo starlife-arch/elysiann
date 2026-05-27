@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide">
+  <nav class="tabs">
+    <a class="tab" href="{{ url_for('dashboard') }}">Swipe</a>
+    <a class="tab active" href="{{ url_for('messages_tab') }}">Messages</a>
+    <a class="tab" href="{{ url_for('settings_tab') }}">Settings</a>
+    <a class="tab" href="{{ url_for('premium_tab') }}">Premium</a>
+  </nav>
+  <section class="card-glass">
+    <h2>Matched Members</h2>
+    {% for u in matched_users %}
+    <form method="post" action="{{ url_for('send_message') }}" class="message-box">
+      <label>{{ u.full_name }}</label>
+      <input type="hidden" name="to_uid" value="{{ u.uid }}">
+      <input name="message" placeholder="Message {{ u.full_name }}" required>
+      <button class="btn">Send</button>
+    </form>
+    {% else %}<p>No matches yet. Go to Swipe tab and like members.</p>{% endfor %}
+  </section>
+  <section class="card-glass"><h3>Inbox</h3>{% for m in inbox %}<p><strong>{{ m.from_name }}</strong>: {{ m.message }}</p>{% else %}<p>No messages.</p>{% endfor %}</section>
+</div>
+{% endblock %}

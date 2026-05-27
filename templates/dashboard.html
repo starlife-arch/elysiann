@@ -1,34 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container container-wide">
-  <section class="swipe-header card-glass">
-    <h2>Discover</h2>
-    <p>Welcome {{ user.full_name }} {% if user.badge_verified %}<span class="blue-badge">✔ Verified</span>{% endif %}</p>
-  </section>
-
+  <nav class="tabs">
+    <a class="tab active" href="{{ url_for('dashboard') }}">Swipe</a>
+    <a class="tab" href="{{ url_for('messages_tab') }}">Messages</a>
+    <a class="tab" href="{{ url_for('settings_tab') }}">Settings</a>
+    <a class="tab" href="{{ url_for('premium_tab') }}">Premium</a>
+  </nav>
   <section class="swipe-grid">
     {% for p in profiles %}
     <article class="swipe-card card-glass">
       {% if p.photo_urls and p.photo_urls|length %}<img src="{{ p.photo_urls[0] }}" alt="{{ p.full_name }}">{% endif %}
-      <div class="swipe-body">
-        <h3>{{ p.full_name }}, {{ p.age }}</h3>
-        <p>{{ p.city }}, {{ p.country }}</p>
-        <p>{{ p.bio }}</p>
-        <p class="chips">{% for i in p.interests or [] %}<span>{{ i }}</span>{% endfor %}</p>
-        <div class="actions"><button class="btn">👈 Pass</button><button class="btn gold">👉 Like</button></div>
-        <form method="post" action="{{ url_for('send_message') }}" class="message-box">
-          <input type="hidden" name="to_uid" value="{{ p.uid }}">
-          <input name="message" placeholder="Send a message..." required>
-          <button class="btn">Send</button>
-        </form>
-      </div>
+      <h3>{{ p.full_name }}, {{ p.age }} {% if p.badge_verified %}<span class="blue-badge">Verified</span>{% endif %}</h3>
+      <p>{{ p.city }}, {{ p.country }}</p>
+      <p>{{ p.bio }}</p>
+      <p class="chips">{% for i in p.profile_interests %}<span>{{ i }}</span>{% endfor %}</p>
+      <form method="post" action="{{ url_for('swipe') }}" class="actions">
+        <input type="hidden" name="target_uid" value="{{ p.uid }}">
+        <button class="btn like" name="direction" value="left">Left = Like</button>
+        <button class="btn" name="direction" value="right">Right = Pass</button>
+      </form>
     </article>
     {% endfor %}
-  </section>
-
-  <section class="card-glass inbox">
-    <h3>Recent messages</h3>
-    {% for m in messages %}<p>From {{ m.from_uid }}: {{ m.message }}</p>{% else %}<p>No messages yet.</p>{% endfor %}
   </section>
 </div>
 {% endblock %}

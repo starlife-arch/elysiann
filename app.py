@@ -37,7 +37,6 @@ def get_user(uid):
 
 
 def get_user_by_email(email):
-    """Look up a user by email address."""
     results = db().collection("users").where("email", "==", email.lower()).limit(1).stream()
     for doc in results:
         return doc.to_dict()
@@ -57,6 +56,32 @@ def has_member_access(user):
     return bool(user.get("invite_used") and user.get("paid"))
 
 
+def get_public_profiles(current_uid):
+    profiles = []
+    for d in db().collection("users").where("status", "==", "approved").stream():
+        user = d.to_dict()
+        if user.get("uid") == current_uid:
+            continue
+        profiles.append({
+            "uid": user.get("uid"),
+            "full_name": user.get("full_name"),
+            "age": user.get("age"),
+            "city": user.get("city"),
+            "country": user.get("country"),
+            "bio": user.get("bio"),
+            "profile_interests": user.get("profile_interests") or user.get("interests") or [],
+            "photo_urls": user.get("photo_urls") or [],
+            "badge_verified": user.get("badge_verified", False),
+        })
+    return profiles
+
+
+def has_match(uid1, uid2):
+    a = db().collection("likes").document(f"{uid1}_{uid2}").get().exists
+    b = db().collection("likes").document(f"{uid2}_{uid1}").get().exists
+    return a and b
+
+
 @app.context_processor
 def inject_auth():
     return {"auth_enabled": bool(get_auth())}
@@ -67,7 +92,6 @@ def index():
     return render_template("index.html")
 
 
-# ── Login via email (no Firebase UID required) ──────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -93,7 +117,6 @@ def login():
     return render_template("login.html")
 
 
-# ── Apply — auto-generates UID from email ───────────────────────────────────
 @app.route("/apply", methods=["GET", "POST"])
 def apply():
     if request.method == "POST":
@@ -101,21 +124,15 @@ def apply():
         if age < 18:
             flash("Applicants must be 18+.", "error")
             return redirect(url_for("apply"))
-
         email = request.form.get("email", "").strip().lower()
         if not email:
             flash("Email address is required.", "error")
             return redirect(url_for("apply"))
-
-        # Check for duplicate
-        existing = get_user_by_email(email)
-        if existing:
+        if get_user_by_email(email):
             flash("An application already exists for this email.", "error")
             return redirect(url_for("login"))
 
-        # Auto-generate a stable UID from email
         uid = str(uuid.uuid5(uuid.NAMESPACE_URL, email))
-
         photo_urls = upload_user_photos(request.files.getlist("photos"), folder="private-dating")
         user_payload = {
             "uid": uid,
@@ -126,8 +143,9 @@ def apply():
             "city": request.form.get("city", "").strip(),
             "email": email,
             "phone": request.form.get("phone", "").strip(),
+            "video_call_window": request.form.get("video_call_window", "").strip(),
             "interests": [i.strip() for i in request.form.get("interests", "").split(",") if i.strip()],
-            "video_handle": request.form.get("video_handle", "").strip(),
+            "profile_interests": [i.strip() for i in request.form.get("interests", "").split(",") if i.strip()],
             "video_verification_status": "pending",
             "badge_verified": False,
             "bio": request.form.get("bio", "").strip(),
@@ -142,12 +160,10 @@ def apply():
             "access_expiry_date": None,
             "banned": False,
             "role": "user",
-            "payment_override": False,
-            "invite_override": False,
             "created_at": utcnow(),
         }
         db().collection("users").document(uid).set(user_payload, merge=True)
-        flash("Application submitted! We'll review it within 48 hours and contact you by email.", "success")
+        flash("Application submitted! We'll review it within 48 hours.", "success")
         return redirect(url_for("login"))
     return render_template("apply.html")
 
@@ -204,15 +220,84 @@ def payment():
 def dashboard():
     user = get_user(session["uid"])
     if user.get("banned"):
-        flash("Account suspended. Contact support.", "error")
+        flash("Account suspended.", "error")
         session.clear()
         return redirect(url_for("login"))
     if not has_member_access(user):
-        flash("Complete invite and payment requirements.", "error")
         return redirect(url_for("post_login_gate"))
-    profiles = [d.to_dict() for d in db().collection("users").where("status", "==", "approved").stream() if d.to_dict().get("uid") != user.get("uid")]
-    messages = [m.to_dict() for m in db().collection("messages").where("to_uid", "==", user["uid"]).stream()]
-    return render_template("dashboard.html", user=user, profiles=profiles, messages=messages)
+    profiles = get_public_profiles(user["uid"])
+    return render_template("dashboard.html", user=user, profiles=profiles)
+
+
+@app.route("/swipe", methods=["POST"])
+@login_required
+def swipe():
+    actor_uid = session["uid"]
+    target_uid = request.form.get("target_uid")
+    direction = request.form.get("direction")
+    if direction == "left":
+        db().collection("likes").document(f"{actor_uid}_{target_uid}").set({"from_uid": actor_uid, "to_uid": target_uid, "created_at": utcnow()})
+        if has_match(actor_uid, target_uid):
+            flash("It's a match! You can now message each other.", "success")
+    else:
+        db().collection("passes").document(f"{actor_uid}_{target_uid}").set({"from_uid": actor_uid, "to_uid": target_uid, "created_at": utcnow()})
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/messages")
+@login_required
+def messages_tab():
+    uid = session["uid"]
+    inbox = [m.to_dict() for m in db().collection("messages").where("to_uid", "==", uid).stream()]
+    outbox = [m.to_dict() for m in db().collection("messages").where("from_uid", "==", uid).stream()]
+    for m in inbox:
+        sender = get_user(m.get("from_uid"))
+        m["from_name"] = sender.get("full_name") if sender else m.get("from_uid")
+    matched_uids = []
+    for doc in db().collection("likes").where("from_uid", "==", uid).stream():
+        to_uid = doc.to_dict().get("to_uid")
+        if has_match(uid, to_uid):
+            matched_uids.append(to_uid)
+    matched_users = [get_user(x) for x in matched_uids if get_user(x)]
+    return render_template("messages.html", inbox=inbox, outbox=outbox, matched_users=matched_users)
+
+
+@app.route("/message", methods=["POST"])
+@login_required
+def send_message():
+    from_uid = session["uid"]
+    to_uid = request.form.get("to_uid")
+    text = request.form.get("message", "").strip()
+    if not has_match(from_uid, to_uid):
+        flash("Messaging is unlocked only after both users like each other.", "error")
+        return redirect(url_for("messages_tab"))
+    if to_uid and text:
+        db().collection("messages").document(str(uuid.uuid4())).set({"from_uid": from_uid, "to_uid": to_uid, "message": text, "created_at": utcnow()})
+        flash("Message sent.", "success")
+    return redirect(url_for("messages_tab"))
+
+
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings_tab():
+    uid = session["uid"]
+    user = get_user(uid)
+    if request.method == "POST":
+        interests = [i.strip() for i in request.form.get("interests", "").split(",") if i.strip()]
+        payload = {"bio": request.form.get("bio", "").strip(), "profile_interests": interests}
+        files = request.files.getlist("photos")
+        if files and any(getattr(f, 'filename', '') for f in files):
+            payload["photo_urls"] = upload_user_photos(files, folder="private-dating")
+        db().collection("users").document(uid).update(payload)
+        flash("Profile settings updated.", "success")
+        return redirect(url_for("settings_tab"))
+    return render_template("settings.html", user=user)
+
+
+@app.route("/premium")
+@login_required
+def premium_tab():
+    return render_template("premium.html")
 
 
 def role_level(role):
@@ -262,14 +347,7 @@ def admin_dashboard():
 
     users = [d.to_dict() for d in db().collection("users").stream()]
     now = utcnow()
-    stats = {
-        "pending": sum(u.get("status") == "pending" for u in users),
-        "approved": sum(u.get("status") == "approved" for u in users),
-        "paid": sum(bool(u.get("paid")) for u in users),
-        "manual": sum(bool(u.get("manual_access")) for u in users),
-        "banned": sum(bool(u.get("banned")) for u in users),
-        "expired": sum(bool(u.get("access_expiry_date") and u["access_expiry_date"] < now) for u in users),
-    }
+    stats = {"pending": sum(u.get("status") == "pending" for u in users), "approved": sum(u.get("status") == "approved" for u in users), "paid": sum(bool(u.get("paid")) for u in users), "manual": sum(bool(u.get("manual_access")) for u in users), "banned": sum(bool(u.get("banned")) for u in users), "expired": sum(bool(u.get("access_expiry_date") and u["access_expiry_date"] < now) for u in users)}
     return render_template("admin.html", users=users, stats=stats)
 
 

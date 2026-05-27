@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&display=swap');
 
 :root {
-  --bg: #06080f;
-  --panel: #0c1120;
+  --bg: #f7f5f2;
+  --panel: #ffffff;
   --border: rgba(196,164,90,0.2);
   --border-bright: rgba(196,164,90,0.6);
-  --text: #f0ede8;
-  --muted: #8a8478;
+  --text: #1f2937;
+  --muted: #6b7280;
   --gold: #c4a45a;
   --gold-light: #e8c87a;
   --red: #c44a4a;
@@ -308,3 +308,5 @@ textarea { resize: vertical; min-height: 100px; }
 .message-box { display:flex; gap:8px; margin-top:10px; }
 .blue-badge { background:#2f7fff; color:white; border-radius:999px; padding:2px 8px; font-size:11px; }
 .pending-list { text-align:left; margin: 14px 0 20px 18px; color: var(--muted); }
+
+.tabs{display:flex;gap:10px;margin-bottom:16px}.tab{padding:10px 14px;border:1px solid var(--border);border-radius:999px;text-decoration:none;color:var(--text);background:#fff}.tab.active{background:var(--gold);color:#111}.like{background:var(--gold-light)}.swipe-card p{margin:6px 0}.card,.card-glass,.form-card{background:rgba(255,255,255,.88)}
