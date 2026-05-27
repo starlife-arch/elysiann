@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-wrap">
+  <a class="back-link" href="{{ url_for('index') }}">← Back</a>
+  <div class="form-card">
+    <div class="form-header">
+      <span class="form-badge">Step 1 of 3</span>
+      <h2>Membership Application</h2>
+      <p class="form-desc">Tell us about yourself. Applications are reviewed within 48 hours.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="app-form">
+      <div class="field-row">
+        <div class="field">
+          <label>Full Name</label>
+          <input name="full_name" placeholder="Your full name" required>
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input name="age" type="number" min="18" placeholder="Must be 18+" required>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Email Address</label>
+          <input name="email" type="email" placeholder="your@email.com" required>
+        </div>
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender" required>
+            <option value="" disabled selected>Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Non-binary</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Country</label>
+          <input name="country" placeholder="Country" required>
+        </div>
+        <div class="field">
+          <label>City</label>
+          <input name="city" placeholder="City" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>About You</label>
+        <textarea name="bio" placeholder="Tell us what makes you exceptional — your passions, lifestyle, what you're looking for…" rows="4" required></textarea>
+      </div>
+
+      <div class="field">
+        <label>Photos <span class="label-hint">(up to 5 photos)</span></label>
+        <div class="file-drop" id="fileDrop">
+          <span class="file-icon">⊕</span>
+          <span class="file-label">Drop photos here or click to browse</span>
+          <input name="photos" type="file" multiple accept="image/*" id="photoInput">
+        </div>
+        <div class="file-preview" id="filePreview"></div>
+      </div>
+
+      <button class="btn-primary full" type="submit">Submit Application →</button>
+      <p class="form-note">Your information is kept strictly private and never shared.</p>
+    </form>
+  </div>
+</div>
+{% endblock %}

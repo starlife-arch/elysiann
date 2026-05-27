@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-wrap">
+  <a class="back-link" href="{{ url_for('index') }}">← Back</a>
+  <div class="form-card form-card--narrow">
+    <div class="form-header">
+      <span class="logo-sm">✦ ELYSIAN</span>
+      <h2>Welcome Back</h2>
+      <p class="form-desc">Enter your email address to access your account.</p>
+    </div>
+    <form method="post" class="app-form">
+      <div class="field">
+        <label>Email Address</label>
+        <input name="email" type="email" placeholder="your@email.com" required autofocus>
+      </div>
+      <button class="btn-primary full" type="submit">Continue →</button>
+    </form>
+    <p class="form-note center">Not a member? <a href="{{ url_for('apply') }}">Request Access</a></p>
+  </div>
+</div>
+{% endblock %}

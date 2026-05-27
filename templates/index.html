@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<main class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <nav class="hero-nav">
+    <span class="logo">✦ ELYSIAN</span>
+    <a class="nav-link" href="{{ url_for('login') }}">Member Login</a>
+  </nav>
+
+  <div class="hero-content">
+    <div class="hero-badge">Invitation Only</div>
+    <h1 class="hero-title">
+      Where <em>exceptional</em><br>people connect
+    </h1>
+    <p class="hero-sub">
+      A meticulously curated private society for verified, remarkable individuals.
+      Every member is hand-selected. Every connection, intentional.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="{{ url_for('apply') }}">Request Access</a>
+      <a class="btn-ghost" href="{{ url_for('login') }}">Already a member?</a>
+    </div>
+  </div>
+
+  <div class="hero-pillars">
+    <div class="pillar">
+      <span class="pillar-icon">◈</span>
+      <span class="pillar-label">Verified Members</span>
+    </div>
+    <div class="pillar-divider"></div>
+    <div class="pillar">
+      <span class="pillar-icon">◈</span>
+      <span class="pillar-label">Private & Secure</span>
+    </div>
+    <div class="pillar-divider"></div>
+    <div class="pillar">
+      <span class="pillar-icon">◈</span>
+      <span class="pillar-label">Invite-Only Access</span>
+    </div>
+  </div>
+</main>
+{% endblock %}
