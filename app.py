@@ -301,6 +301,30 @@ def settings_tab():
     return render_template("settings.html", user=user)
 
 
+@app.route("/explore")
+@login_required
+def explore_tab():
+    return render_template("explore.html")
+
+
+@app.route("/likes")
+@login_required
+def likes_tab():
+    uid = session["uid"]
+    liked_by = []
+    for doc in db().collection("likes").where("to_uid", "==", uid).stream():
+        u = get_user(doc.to_dict().get("from_uid"))
+        if u:
+            liked_by.append(u)
+    return render_template("likes.html", liked_by=liked_by)
+
+
+@app.route("/profile")
+@login_required
+def profile_tab():
+    return render_template("profile.html", user=get_user(session["uid"]))
+
+
 @app.route("/premium")
 @login_required
 def premium_tab():

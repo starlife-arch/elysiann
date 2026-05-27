@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide mobile-pad">
+  <h2>Likes</h2>
+  <div class="likes-grid">{% for u in liked_by %}<article class="like-card"><h3>{{u.full_name}}</h3><p>Recently active</p></article>{% else %}<p>No likes yet.</p>{% endfor %}</div>
+</div>
+{% include '_member_nav.html' %}
+{% endblock %}

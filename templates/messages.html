@@ -20,4 +20,5 @@
   </section>
   <section class="card-glass"><h3>Inbox</h3>{% for m in inbox %}<p><strong>{{ m.from_name }}</strong>: {{ m.message }}</p>{% else %}<p>No messages.</p>{% endfor %}</section>
 </div>
+{% include '_member_nav.html' %}
 {% endblock %}
