@@ -1,1 +1,34 @@
-{% extends 'base.html' %}{% block content %}<div class='container'><h2>Member Dashboard</h2><p>Welcome {{ user.full_name }}.</p><section class='profiles'>{% for p in profiles %}<article class='card profile'><h3>{{ p.full_name }}</h3><p>{{ p.city }}, {{ p.country }}</p><p>{{ p.bio }}</p><button class='btn'>Like</button><button class='btn'>Match</button></article>{% endfor %}</section></div>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide">
+  <section class="swipe-header card-glass">
+    <h2>Discover</h2>
+    <p>Welcome {{ user.full_name }} {% if user.badge_verified %}<span class="blue-badge">✔ Verified</span>{% endif %}</p>
+  </section>
+
+  <section class="swipe-grid">
+    {% for p in profiles %}
+    <article class="swipe-card card-glass">
+      {% if p.photo_urls and p.photo_urls|length %}<img src="{{ p.photo_urls[0] }}" alt="{{ p.full_name }}">{% endif %}
+      <div class="swipe-body">
+        <h3>{{ p.full_name }}, {{ p.age }}</h3>
+        <p>{{ p.city }}, {{ p.country }}</p>
+        <p>{{ p.bio }}</p>
+        <p class="chips">{% for i in p.interests or [] %}<span>{{ i }}</span>{% endfor %}</p>
+        <div class="actions"><button class="btn">👈 Pass</button><button class="btn gold">👉 Like</button></div>
+        <form method="post" action="{{ url_for('send_message') }}" class="message-box">
+          <input type="hidden" name="to_uid" value="{{ p.uid }}">
+          <input name="message" placeholder="Send a message..." required>
+          <button class="btn">Send</button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="card-glass inbox">
+    <h3>Recent messages</h3>
+    {% for m in messages %}<p>From {{ m.from_uid }}: {{ m.message }}</p>{% else %}<p>No messages yet.</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}

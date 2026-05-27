@@ -83,8 +83,8 @@ def login():
             flash("Account suspended. Contact support.", "error")
             return redirect(url_for("login"))
         if user.get("status") == "pending":
-            flash("Your application is still under review. We'll be in touch soon.", "error")
-            return redirect(url_for("login"))
+            session["pending_uid"] = user["uid"]
+            return redirect(url_for("pending_verification"))
         if user.get("status") == "rejected":
             flash("Your application was not approved at this time.", "error")
             return redirect(url_for("login"))
@@ -125,6 +125,11 @@ def apply():
             "country": request.form.get("country", "").strip(),
             "city": request.form.get("city", "").strip(),
             "email": email,
+            "phone": request.form.get("phone", "").strip(),
+            "interests": [i.strip() for i in request.form.get("interests", "").split(",") if i.strip()],
+            "video_handle": request.form.get("video_handle", "").strip(),
+            "video_verification_status": "pending",
+            "badge_verified": False,
             "bio": request.form.get("bio", "").strip(),
             "photo_urls": photo_urls,
             "status": "pending",
@@ -145,6 +150,17 @@ def apply():
         flash("Application submitted! We'll review it within 48 hours and contact you by email.", "success")
         return redirect(url_for("login"))
     return render_template("apply.html")
+
+
+@app.route("/pending")
+def pending_verification():
+    uid = session.get("pending_uid")
+    if not uid:
+        return redirect(url_for("login"))
+    user = get_user(uid)
+    if not user:
+        return redirect(url_for("login"))
+    return render_template("pending.html", user=user)
 
 
 @app.route("/post-login")
@@ -194,8 +210,9 @@ def dashboard():
     if not has_member_access(user):
         flash("Complete invite and payment requirements.", "error")
         return redirect(url_for("post_login_gate"))
-    profiles = [d.to_dict() for d in db().collection("users").where("status", "==", "approved").stream()]
-    return render_template("dashboard.html", user=user, profiles=profiles)
+    profiles = [d.to_dict() for d in db().collection("users").where("status", "==", "approved").stream() if d.to_dict().get("uid") != user.get("uid")]
+    messages = [m.to_dict() for m in db().collection("messages").where("to_uid", "==", user["uid"]).stream()]
+    return render_template("dashboard.html", user=user, profiles=profiles, messages=messages)
 
 
 def role_level(role):
@@ -224,7 +241,7 @@ def admin_dashboard():
         target_uid = request.form.get("target_uid")
         ref = db().collection("users").document(target_uid)
         if action == "approve":
-            ref.update({"status": "approved", "invite_code": generate_invite_code(), "invite_used": False})
+            ref.update({"status": "approved", "admin_access_code": str(uuid.uuid4())[:8].upper(), "invite_code": generate_invite_code(), "invite_used": False})
         elif action == "reject":
             ref.update({"status": "rejected"})
         elif action == "manual_access":
@@ -238,6 +255,8 @@ def admin_dashboard():
             ref.update({"banned": True})
         elif action == "unban":
             ref.update({"banned": False})
+        elif action == "verify_badge":
+            ref.update({"badge_verified": True, "video_verification_status": "verified"})
         flash("Admin action completed.", "success")
         return redirect(url_for("admin_dashboard"))
 
@@ -252,6 +271,21 @@ def admin_dashboard():
         "expired": sum(bool(u.get("access_expiry_date") and u["access_expiry_date"] < now) for u in users),
     }
     return render_template("admin.html", users=users, stats=stats)
+
+
+
+@app.route("/message", methods=["POST"])
+@login_required
+def send_message():
+    from_uid = session["uid"]
+    to_uid = request.form.get("to_uid")
+    text = request.form.get("message", "").strip()
+    if to_uid and text:
+        db().collection("messages").document(str(uuid.uuid4())).set({
+            "from_uid": from_uid, "to_uid": to_uid, "message": text, "created_at": utcnow()
+        })
+        flash("Message sent.", "success")
+    return redirect(url_for("dashboard"))
 
 
 @app.errorhandler(Exception)
