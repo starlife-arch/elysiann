@@ -358,6 +358,21 @@ def admin_dashboard():
     return render_template("admin.html", users=users, stats=stats)
 
 
+
+@app.route("/message", methods=["POST"])
+@login_required
+def send_message():
+    from_uid = session["uid"]
+    to_uid = request.form.get("to_uid")
+    text = request.form.get("message", "").strip()
+    if to_uid and text:
+        db().collection("messages").document(str(uuid.uuid4())).set({
+            "from_uid": from_uid, "to_uid": to_uid, "message": text, "created_at": utcnow()
+        })
+        flash("Message sent.", "success")
+    return redirect(url_for("dashboard"))
+
+
 @app.errorhandler(Exception)
 def handle_exception(exc):
     if isinstance(exc, HTTPException):
