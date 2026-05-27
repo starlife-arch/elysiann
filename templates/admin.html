@@ -1,1 +1,22 @@
-{% extends 'base.html' %}{% block content %}<div class='container'><h2>Admin Dashboard</h2><div class='stats'>{% for k,v in stats.items() %}<div class='card'><h3>{{k}}</h3><p>{{v}}</p></div>{% endfor %}</div>{% for u in users %}<article class='card'><h3>{{u.full_name}} ({{u.uid}})</h3><p>Status: {{u.status}} | Role: {{u.role}} | Paid: {{u.paid}} | Banned: {{u.banned}}</p><form method='post' class='inline'><input type='hidden' name='target_uid' value='{{u.uid}}'><button name='action' value='approve' class='btn gold'>Approve</button><button name='action' value='reject' class='btn'>Reject</button><button name='action' value='ban' class='btn'>Ban</button><button name='action' value='unban' class='btn'>Unban</button></form></article>{% endfor %}</div>{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<div class='container container-wide'>
+  <h2>Admin Dashboard</h2>
+  <div class='stats'>{% for k,v in stats.items() %}<div class='card'><h3>{{k}}</h3><p>{{v}}</p></div>{% endfor %}</div>
+  {% for u in users %}
+  <article class='card card-glass'>
+    <h3>{{u.full_name}} ({{u.uid}})</h3>
+    <p>Status: {{u.status}} | Role: {{u.role}} | Paid: {{u.paid}} | Banned: {{u.banned}}</p>
+    <p>Email: {{ u.email }} | Phone: {{ u.phone or 'N/A' }} | Video Slot: {{ u.video_call_window or 'N/A' }}</p>
+    <p>Invite: {{ u.invite_code or 'Not generated' }} | Admin Code: {{ u.admin_access_code or 'Pending approval' }}</p>
+    <form method='post' class='inline'>
+      <input type='hidden' name='target_uid' value='{{u.uid}}'>
+      <button name='action' value='approve' class='btn gold'>Approve</button><button name='action' value='reject' class='btn'>Reject</button>
+      <button name='action' value='verify_badge' class='btn'>Blue badge</button>
+      <button name='action' value='ban' class='btn'>Ban</button><button name='action' value='unban' class='btn'>Unban</button>
+      <select name='days'><option value='7'>7 days</option><option value='30' selected>30 days</option><option value='90'>90 days</option><option value='permanent'>Permanent</option></select>
+      <button name='action' value='manual_access' class='btn'>Grant Access</button>
+      <button name='action' value='revoke_manual_access' class='btn'>Revoke Access</button>
+    </form>
+  </article>{% endfor %}
+</div>{% endblock %}
