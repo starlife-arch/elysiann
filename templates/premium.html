@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container-wide">
+  <nav class="tabs">
+    <a class="tab" href="{{ url_for('dashboard') }}">Swipe</a>
+    <a class="tab" href="{{ url_for('messages_tab') }}">Messages</a>
+    <a class="tab" href="{{ url_for('settings_tab') }}">Settings</a>
+    <a class="tab active" href="{{ url_for('premium_tab') }}">Premium</a>
+  </nav>
+  <section class="card-glass">
+    <h2>Premium Plans</h2>
+    <p>Unlock boosts, advanced filters, and priority visibility.</p>
+    <a class="btn-primary" href="{{ url_for('payment') }}">Subscribe Now</a>
+  </section>
+</div>
+{% endblock %}
